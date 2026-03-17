@@ -18,6 +18,8 @@ Benchmarked on a single RTX 5090 (32 GB) with [llama-bench](https://github.com/g
 
 - 256K context length with FP8 KV cache
 - NVFP4 quantization via Marlin GEMM backend
+- [Barubary attuned chat template](https://huggingface.co/barubary/qwen3.5-barubary-attuned-chat-template) with 21 fixes over the official Qwen3.5 template
+- Tool calling support with `qwen3_coder` parser and `qwen3` reasoning parser
 - Works out of the box with vLLM v0.17+ — no patches or custom builds needed
 - Uses the official `vllm/vllm-openai:nightly` Docker image
 
@@ -62,9 +64,27 @@ All user-specific settings live in `.env` (see [`.env.example`](.env.example)):
 | Parameter | Value | Notes |
 |---|---|---|
 | `--max-model-len` | `262144` | 256K context window |
-| `--gpu-memory-utilization` | `0.85` | ~27 GB of 32 GB VRAM |
+| `--gpu-memory-utilization` | `0.95` | ~30 GB of 32 GB VRAM |
 | `--max-num-seqs` | `4` | Max concurrent sequences |
 | `--max-num-batched-tokens` | `4096` | Per-batch token budget |
+| `--kv-cache-dtype` | `fp8` | FP8 KV cache for memory efficiency |
+| `--reasoning-parser` | `qwen3` | Extracts `<think>` blocks as reasoning |
+| `--tool-call-parser` | `qwen3_coder` | Parses tool calls from model output |
+| `--chat-template` | `/chat_template.jinja` | Custom [barubary attuned](https://huggingface.co/barubary/qwen3.5-barubary-attuned-chat-template) template |
+
+## Chat Template
+
+This setup uses the [barubary attuned chat template](https://huggingface.co/barubary/qwen3.5-barubary-attuned-chat-template) (`chat_template.jinja`) which fixes **21 issues** in the official Qwen3.5 chat template, including:
+
+- **Tool call bleed bug** — `<tool_call>` leaking into `<think>` blocks (auto-disabled thinking when tools are active)
+- **Parallel tool calls** — proper `\n\n` delimiter between multiple tool call blocks
+- **Broken tool calling format** — `arguments.items()` replaces bare key iteration
+- **KV-cache reuse** — correct `enable_thinking` handling for in-context assistant turns
+- **Developer role support** — handles Claude Code / Codex / OpenCode developer messages
+- **Deep agent loops** — graceful fallback instead of crashes when no real user query found
+- **Streaming compatibility** — clean newline boundaries on XML tag openings
+
+For the full list of fixes and configuration options, see the [upstream template page](https://huggingface.co/barubary/qwen3.5-barubary-attuned-chat-template).
 
 ## About the Patch (vLLM v0.16 only)
 
@@ -87,7 +107,7 @@ docker compose -f docker-compose.v16.yml up -d
 
 Tested on a single NVIDIA RTX 5090 (32 GB) using [llama-bench](https://github.com/ggml-org/llama.cpp/tree/master/tools/llama-bench):
 
-![llama-bench results](llama-benchy.png)
+![llama-benchy results](llama-benchy.png)
 
 ## Requirements
 
