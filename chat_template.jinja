@@ -59,7 +59,7 @@
 {%- set video_count = namespace(value=0) %}
 {%- set add_vision_id = add_vision_id if add_vision_id is defined else false %}
 {%- set enable_thinking = enable_thinking if enable_thinking is defined else true %}
-{%- set auto_disable_thinking_with_tools = auto_disable_thinking_with_tools if auto_disable_thinking_with_tools is defined else true %}
+{%- set auto_disable_thinking_with_tools = auto_disable_thinking_with_tools if auto_disable_thinking_with_tools is defined else false %}
 {%- set max_tool_arg_chars = max_tool_arg_chars if max_tool_arg_chars is defined else 0 %}
 {%- set max_tool_response_chars = max_tool_response_chars if max_tool_response_chars is defined else 0 %}
 
